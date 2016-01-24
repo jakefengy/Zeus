@@ -40,6 +40,8 @@ import java.util.UUID;
 /**
  * 网络请求入口。使用前，需要在Application中注册RequestUtils组建，注册方法：RequestUtils.initRequestUtils
  * (appContext);
+ *
+ * @author 小孩子xm
  */
 public class RequestUtils {
 
@@ -108,12 +110,12 @@ public class RequestUtils {
      */
     public static <T> void sendRequest(Context context, String tag, int method,
                                        String url, HashMap<String, String> params, Type type,
-                                       RequestListener<T> callback) {
+                                       CustomGsonRequest.RequestListener<T> callback) {
         try {
             if (!isConnected(context)) {
                 Tip.toast(context, "网络不可用，请检查网络连接！");
                 if (callback != null) {
-                    callback.onError(new VolleyError("Net is Disconnected"));
+                    callback.onError(new VolleyError("网络不可用"));
                 }
                 return;
 
@@ -121,17 +123,17 @@ public class RequestUtils {
 
             if (TextUtils.isEmpty(url)) {
                 if (callback != null) {
-                    callback.onError(new VolleyError("url is empty"));
+                    callback.onError(new VolleyError("url为空"));
                 }
                 return;
             }
 
-            if (params == null) {
-                params = new HashMap<>();
-            }
-
             if (type == null) {
                 type = String.class;
+            }
+
+            if (params == null) {
+                params = new HashMap<>();
             }
 
             if (TextUtils.isEmpty(tag)) {
@@ -166,11 +168,11 @@ public class RequestUtils {
      * @param params   请求参数(HashMap<String, String>)
      * @param type     返回值数据类型。如Custom.class 或 new TypeToken<List<BizTest>>()
      *                 {}.getType()
-     * @param listener 请求回调接口
+     * @param callback 请求回调接口
      */
     private static <T> void buildRequest(Context context, final String tag,
                                          int method, String url, HashMap<String, String> params, Type type,
-                                         final RequestListener<T> listener, int timeoutMs, int maxNumRetries) {
+                                         final CustomGsonRequest.RequestListener<T> callback, int timeoutMs, int maxNumRetries) {
 
         CustomGsonRequest<T> sReq = new CustomGsonRequest<>(method, url, type,
                 params, new Listener<T>() {
@@ -178,16 +180,23 @@ public class RequestUtils {
             @Override
             public void onResponse(T response) {
                 print(JSON.toJSONString(response));
-                if (listener != null)
-                    listener.onSuccess(response);
+
+                if (callback != null)
+                    callback.onSuccess(response);
             }
         }, new ErrorListener() {
 
             @Override
             public void onErrorResponse(VolleyError error) {
                 print(error.getMessage());
-                if (listener != null)
-                    listener.onError(error);
+                if (error instanceof DataError) {
+                    DataError er = (DataError) error;
+                    if (callback != null)
+                        callback.onDataError(new DataError(er.getErrorCode(), er.getErrorMsg()));
+                } else {
+                    if (callback != null)
+                        callback.onError(error);
+                }
 
             }
         });
@@ -211,7 +220,7 @@ public class RequestUtils {
      */
     public static <T> void sendRequest(Context context, String tag, String url,
                                        Map<String, String> params, Map<String, File> files, Type type,
-                                       final RequestListener<T> callback) {
+                                       final CustomGsonRequest.RequestListener<T> callback) {
 
         if (!isConnected(context)) {
             Tip.toast(context, "网络不可用，请检查网络连接！");
@@ -259,8 +268,14 @@ public class RequestUtils {
             @Override
             public void onErrorResponse(VolleyError error) {
                 print(error.getMessage());
-                if (callback != null)
-                    callback.onError(error);
+                if (error instanceof DataError) {
+                    DataError er = (DataError) error;
+                    if (callback != null)
+                        callback.onDataError(new DataError(er.getErrorCode(), er.getErrorMsg()));
+                } else {
+                    if (callback != null)
+                        callback.onError(error);
+                }
             }
         });
 
@@ -344,17 +359,6 @@ public class RequestUtils {
         }
 
         return mResults;
-    }
-
-    // Interface
-    public interface RequestListener<T> {
-
-        void onSuccess(T result);
-
-        void onDataError(DataError dataError);
-
-        void onError(VolleyError volleyError);
-
     }
 
     // Log

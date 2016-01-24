@@ -3,6 +3,8 @@ package com.xm.zeus.volley.expand;
 import android.util.Log;
 
 import com.alibaba.fastjson.JSON;
+import com.xm.zeus.volley.exception.DataError;
+import com.xm.zeus.volley.model.BaseModel;
 import com.xm.zeus.volley.source.AuthFailureError;
 import com.xm.zeus.volley.source.DefaultRetryPolicy;
 import com.xm.zeus.volley.source.NetworkResponse;
@@ -11,6 +13,7 @@ import com.xm.zeus.volley.source.Request;
 import com.xm.zeus.volley.source.Response;
 import com.xm.zeus.volley.source.Response.ErrorListener;
 import com.xm.zeus.volley.source.Response.Listener;
+import com.xm.zeus.volley.source.VolleyError;
 import com.xm.zeus.volley.source.toolbox.HttpHeaderParser;
 
 import org.apache.http.protocol.HTTP;
@@ -141,7 +144,16 @@ public class CustomGsonRequest<T> extends Request<T> {
     private Response<T> formattingData(NetworkResponse response) {
 
         try {
-            return (Response<T>) Response.success(JSON.parseObject(new String(response.data, "utf-8"), mType), HttpHeaderParser.parseCacheHeaders(response));
+            String str = new String(response.data, "utf-8");
+            BaseModel baseModel = JSON.parseObject(str, BaseModel.class);
+            if (baseModel.getCode().equals("0")) {
+                return (Response<T>) Response.success(
+                        JSON.parseObject(baseModel.getBody(), mType),
+                        HttpHeaderParser.parseCacheHeaders(response));
+            } else {
+                return Response.error(new DataError(baseModel.getCode(), baseModel.getMessage()));
+            }
+
         } catch (Exception e) {
             return Response.error(new ParseError(e));
         }
@@ -157,6 +169,17 @@ public class CustomGsonRequest<T> extends Request<T> {
     public String getBodyContentType() {
         return "application/json; charset="
                 + getParamsEncoding();
+    }
+
+    // Interface
+    public interface RequestListener<T> {
+
+        void onSuccess(T result);
+
+        void onDataError(DataError dataError);
+
+        void onError(VolleyError volleyError);
+
     }
 
 }

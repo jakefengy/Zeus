@@ -1,11 +1,13 @@
 package com.xm.zeus.volley.exception;
 
+import com.xm.zeus.volley.source.VolleyError;
+
 /**
  * 自定义异常
  *
  * @author 小孩子xm
  */
-public class DataError extends Exception {
+public class DataError extends VolleyError {
 
     private String errorCode;
     private String errorMsg;

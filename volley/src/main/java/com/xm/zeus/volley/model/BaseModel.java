@@ -1,27 +1,36 @@
 package com.xm.zeus.volley.model;
 
 /**
- * 消息体
+ * Created by fengy on 2016-01-24.
  */
 public class BaseModel {
 
-    private String code;
-    private String message;
+    private String Code;
+    private String Message;
+    private String Body;
 
     public String getCode() {
-        return code;
+        return Code;
     }
 
     public void setCode(String code) {
-        this.code = code;
+        Code = code;
     }
 
     public String getMessage() {
-        return message;
+        return Message;
     }
 
     public void setMessage(String message) {
-        this.message = message;
+        Message = message;
+    }
+
+    public String getBody() {
+        return Body;
+    }
+
+    public void setBody(String body) {
+        Body = body;
     }
 
 }

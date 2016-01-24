@@ -10,6 +10,17 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/LICENSE'
+    }
+
+    defaultConfig {
+        multiDexEnabled true
+    }
+
     buildTypes {
         release {
             minifyEnabled false
