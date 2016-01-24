@@ -1,0 +1,11 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.xm.zeus.volley">
+
+    <application
+        android:allowBackup="true"
+        android:label="@string/module_name"
+        android:supportsRtl="true">
+
+    </application>
+
+</manifest>
