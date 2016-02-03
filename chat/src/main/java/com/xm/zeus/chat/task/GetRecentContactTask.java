@@ -1,8 +1,12 @@
 package com.xm.zeus.chat.task;
 
 import com.xm.zeus.chat.entity.MAChatListIQ;
+import com.xm.zeus.chat.entity.MAChatListItem;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 作者：小孩子xm on 2016-02-01 12:18
@@ -12,7 +16,7 @@ public class GetRecentContactTask extends HttpTask {
 
     private AbstractXMPPConnection xmppConnection;
 
-    public GetRecentContactTask(String strTaskName, AbstractXMPPConnection xmppConnection, GetRecentContactTaskListener listener) {
+    public GetRecentContactTask(String strTaskName, AbstractXMPPConnection xmppConnection, GetRecentContactListener listener) {
         super(strTaskName);
         this.xmppConnection = xmppConnection;
         this.listener = listener;
@@ -24,19 +28,22 @@ public class GetRecentContactTask extends HttpTask {
         try {
             MAChatListIQ aMAChatListIQ = new MAChatListIQ();
 
-            final MAChatListIQ result = xmppConnection.createPacketCollectorAndSend(aMAChatListIQ).nextResultOrThrow();
-            if (result == null) {
-                onError(new NullPointerException("Recent Contact is null"));
-            } else {
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (listener != null) {
-                            listener.onSuccess(result);
-                        }
-                    }
-                });
+            MAChatListIQ result = xmppConnection.createPacketCollectorAndSend(aMAChatListIQ).nextResultOrThrow();
+
+            final List<MAChatListItem> list = new ArrayList<>();
+
+            if (result != null && result.getItems() != null) {
+                list.addAll(result.getItems());
             }
+
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (listener != null) {
+                        listener.onSuccess(list);
+                    }
+                }
+            });
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -57,10 +64,10 @@ public class GetRecentContactTask extends HttpTask {
         });
     }
 
-    private GetRecentContactTaskListener listener;
+    private GetRecentContactListener listener;
 
-    public interface GetRecentContactTaskListener {
-        void onSuccess(MAChatListIQ recentContact);
+    public interface GetRecentContactListener {
+        void onSuccess(List<MAChatListItem> recentContact);
 
         void onError(Exception e);
     }

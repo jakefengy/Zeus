@@ -1,35 +1,23 @@
 package com.xm.zeus.chat;
 
-import com.xm.zeus.chat.callback.ILoginListener;
+import android.text.TextUtils;
+
 import com.xm.zeus.chat.callback.ILoginOutListener;
-import com.xm.zeus.chat.callback.IReLoginListener;
-import com.xm.zeus.chat.callback.IRecentContactListener;
-import com.xm.zeus.chat.entity.MAChatListIQ;
-import com.xm.zeus.chat.entity.MAChatListItem;
-import com.xm.zeus.chat.entity.MAChatListProvider;
-import com.xm.zeus.chat.entity.MAChatModifyIQ;
-import com.xm.zeus.chat.entity.MAChatModifyProvider;
-import com.xm.zeus.chat.entity.MALocalIdExtension;
-import com.xm.zeus.chat.entity.MALocalIdExtensionProvider;
-import com.xm.zeus.chat.entity.MAMSGExtension;
-import com.xm.zeus.chat.entity.MAMSGExtensionProvider;
-import com.xm.zeus.chat.entity.MAMessageListIQ;
-import com.xm.zeus.chat.entity.MAMessageListProvider;
-import com.xm.zeus.chat.entity.MUCRoomListIQ;
-import com.xm.zeus.chat.entity.MUCRoomListProvider;
+import com.xm.zeus.chat.task.ClearUnreadMsgNumTask;
+import com.xm.zeus.chat.task.GetChatHistoryTask;
 import com.xm.zeus.chat.task.GetRecentContactTask;
 import com.xm.zeus.chat.task.LoginTask;
 import com.xm.zeus.chat.task.MessageReceiver;
 import com.xm.zeus.chat.task.ReLoginTask;
+import com.xm.zeus.chat.task.SendMsgTask;
 import com.xm.zeus.chat.task.TaskManager;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.ReconnectionManager;
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.provider.ProviderManager;
 
-import java.util.ArrayList;
+import java.util.Date;
 
 /**
  * 聊天管理类
@@ -49,6 +37,10 @@ public class ChatClient {
     private AbstractXMPPConnection xmppConnection;
     private ReconnectionManager reconnectionManager;
 
+    private String serviceName;
+    private String serviceHost;
+    private int servicePort;
+
     private ChatClient() {
         mTaskMgr = new TaskManager();
         mTaskMgr.init(0);
@@ -67,30 +59,75 @@ public class ChatClient {
         return instance;
     }
 
-    // 检查连接是否可用
+    // ---------------------聊天相关请求---------------------------- //
+
+
+    /**
+     * 检查xmppConnection是否可用
+     *
+     * @return true isAvailable false unAvailable
+     */
     private boolean isConnectionAvailable() {
         return xmppConnection != null && xmppConnection.isConnected() && xmppConnection.isAuthenticated();
     }
 
     // 登录
-    public void login(String serviceName, String serviceHost, int servicePort, String userName, String password, final ILoginListener loginListener) {
-        LoginTask loginTask = new LoginTask("Login", serviceName, serviceHost, servicePort, userName, password, new LoginTask.LoginTaskListener() {
+    public void login(String serviceName, String serviceHost, int servicePort, String userName, String password, String source, final LoginTask.LoginTaskListener loginListener) {
+
+        if (TextUtils.isEmpty(serviceName)) {
+            if (loginListener != null) {
+                loginListener.onError(new NullPointerException("serviceName is empty"));
+            }
+            return;
+        }
+
+        if (TextUtils.isEmpty(serviceHost)) {
+            if (loginListener != null) {
+                loginListener.onError(new NullPointerException("serviceHost is empty"));
+            }
+            return;
+        }
+
+        if (TextUtils.isEmpty(userName)) {
+            if (loginListener != null) {
+                loginListener.onError(new NullPointerException("userName is empty"));
+            }
+            return;
+        }
+
+        if (TextUtils.isEmpty(password)) {
+            if (loginListener != null) {
+                loginListener.onError(new NullPointerException("password is empty"));
+            }
+            return;
+        }
+
+        if (TextUtils.isEmpty(source)) {
+            if (loginListener != null) {
+                loginListener.onError(new NullPointerException("source is empty"));
+            }
+            return;
+        }
+
+        setServiceHost(serviceHost);
+        setServiceName(serviceName);
+        setServicePort(servicePort);
+
+        LoginTask loginTask = new LoginTask("Login", serviceName, serviceHost, servicePort, userName, password, source, new LoginTask.LoginTaskListener() {
             @Override
             public void onSuccess(AbstractXMPPConnection connection) {
-
-                xmppConnection = connection;
 
                 loginSuccessful();
 
                 if (loginListener != null) {
-                    loginListener.onLoginSuccessful();
+                    loginListener.onSuccess(connection);
                 }
             }
 
             @Override
             public void onError(Exception e) {
                 if (loginListener != null) {
-                    loginListener.onLoginFailed(e);
+                    loginListener.onError(e);
                 }
             }
         });
@@ -98,7 +135,8 @@ public class ChatClient {
         mTaskMgr.addTask(loginTask);
     }
 
-    private void loginSuccessful() {
+    // 登录成功之后的初始化
+    public void loginSuccessful() {
 
         // 启动重连机制
         reconnectionManager = ReconnectionManager.getInstanceFor(xmppConnection);
@@ -116,21 +154,22 @@ public class ChatClient {
     // 登出
     public void loginOut(ILoginOutListener listener) {
         try {
-            if (isConnectionAvailable()) {
-
-                beforeLoginOut();
-
-                xmppConnection.disconnect();
-                xmppConnection = null;
-
-                if (listener != null) {
-                    listener.onLoginOutSuccessful();
-                }
-            } else {
+            if (!isConnectionAvailable()) {
                 if (listener != null) {
                     listener.onLoginOutFailed(new Exception("connection is null or no longer connected"));
                 }
+                return;
             }
+
+            beforeLoginOut();
+
+            xmppConnection.disconnect();
+            xmppConnection = null;
+
+            if (listener != null) {
+                listener.onLoginOutSuccessful();
+            }
+
         } catch (Exception e) {
             if (listener != null) {
                 listener.onLoginOutFailed(e);
@@ -190,68 +229,160 @@ public class ChatClient {
     };
 
     // 重新登录
-    public void reLogin(final IReLoginListener listener) {
+    public void reLogin(ReLoginTask.ReLoginListener listener) {
 
-        if (isConnectionAvailable()) {
-
-            ReLoginTask reLoginTask = new ReLoginTask("ReLoginTask", xmppConnection, new ReLoginTask.ReLoginTaskListener() {
-                @Override
-                public void onSuccess() {
-                    if (listener != null) {
-                        listener.onReLoginSuccessful();
-                    }
-                }
-
-                @Override
-                public void onError(Exception e) {
-                    if (listener != null) {
-                        listener.onReLoginFailed(e);
-                    }
-                }
-            });
-
-            mTaskMgr.addTask(reLoginTask);
-        } else {
-            if (listener != null) {
-                listener.onReLoginFailed(new Exception("connection is null or no longer connected"));
-            }
-        }
-    }
-
-    // 获取最近联系人列表
-    public void getRecentContact(final IRecentContactListener listener) {
-
-        if (isConnectionAvailable()) {
-
-            GetRecentContactTask task = new GetRecentContactTask("GetRecentContactTask", xmppConnection, new GetRecentContactTask.GetRecentContactTaskListener() {
-                @Override
-                public void onSuccess(MAChatListIQ recentContact) {
-                    if (recentContact.getItems() != null) {
-                        if (listener != null) {
-                            listener.onSuccessful(recentContact.getItems());
-                        }
-                    } else {
-                        if (listener != null) {
-                            listener.onSuccessful(new ArrayList<MAChatListItem>());
-                        }
-                    }
-                }
-
-                @Override
-                public void onError(Exception e) {
-                    if (listener != null) {
-                        listener.onError(e);
-                    }
-                }
-            });
-
-            mTaskMgr.addTask(task);
-        } else {
+        if (!isConnectionAvailable()) {
             if (listener != null) {
                 listener.onError(new Exception("connection is null or no longer connected"));
             }
+            return;
         }
+
+        ReLoginTask reLoginTask = new ReLoginTask("ReLoginTask", xmppConnection, listener);
+
+        mTaskMgr.addTask(reLoginTask);
     }
 
+    // 获取最近联系人列表
+    public void getRecentContact(GetRecentContactTask.GetRecentContactListener listener) {
+
+        if (!isConnectionAvailable()) {
+            if (listener != null) {
+                listener.onError(new Exception("connection is null or no longer connected"));
+            }
+            return;
+        }
+
+        GetRecentContactTask task = new GetRecentContactTask("GetRecentContactTask", xmppConnection, listener);
+
+        mTaskMgr.addTask(task);
+    }
+
+    // 获取消息历史记录
+    public void getChatHistory(String userId, Date msgDate, int pageSize, GetChatHistoryTask.GetChatHistoryListener listener) {
+
+        if (!isConnectionAvailable()) {
+            if (listener != null) {
+                listener.onError(new NullPointerException("connection is null or no longer connected"));
+            }
+            return;
+        }
+
+        if (TextUtils.isEmpty(userId)) {
+            if (listener != null) {
+                listener.onError(new NullPointerException("userId is empty"));
+            }
+            return;
+        }
+
+        if (msgDate == null) {
+            if (listener != null) {
+                listener.onError(new NullPointerException("msgDate is empty"));
+            }
+            return;
+        }
+
+        if (pageSize <= 0) {
+            if (listener != null) {
+                listener.onError(new Exception("pageSize mast ge 0, now pageSize = " + pageSize));
+            }
+            return;
+        }
+
+        GetChatHistoryTask getChatHistory = new GetChatHistoryTask("GetChatHistoryTask", xmppConnection, userId, getServiceHost(), msgDate, pageSize, listener);
+
+        mTaskMgr.addTask(getChatHistory);
+    }
+
+    // 清除未读消息数
+    public void clearNumberOfUnreadMessages(String userId, ClearUnreadMsgNumTask.ClearUnreadMsgNumListener listener) {
+
+        if (!isConnectionAvailable()) {
+            if (listener != null) {
+                listener.onError(new NullPointerException("connection is null or no longer connected"));
+            }
+            return;
+        }
+
+        if (TextUtils.isEmpty(userId)) {
+            if (listener != null) {
+                listener.onError(new NullPointerException("userId is empty"));
+            }
+            return;
+        }
+
+        if (TextUtils.isEmpty(getServiceHost())) {
+            if (listener != null) {
+                listener.onError(new NullPointerException("ServiceHost is empty"));
+            }
+            return;
+        }
+
+        ClearUnreadMsgNumTask clearUnreadMsgNum = new ClearUnreadMsgNumTask("ClearUnreadMsgNumTask", xmppConnection, userId, getServiceHost(), listener);
+
+        mTaskMgr.addTask(clearUnreadMsgNum);
+    }
+
+    // 发送消息
+    public void sendMessage(String localId, String withId, String msg, SendMsgTask.SendMsgListener listener) {
+
+        if (!isConnectionAvailable()) {
+            if (listener != null) {
+                listener.onError(new NullPointerException("connection is null or no longer connected"));
+            }
+            return;
+        }
+
+        if (TextUtils.isEmpty(withId)) {
+            if (listener != null) {
+                listener.onError(new NullPointerException("withId is empty"));
+            }
+            return;
+        }
+
+        if (TextUtils.isEmpty(getServiceHost())) {
+            if (listener != null) {
+                listener.onError(new NullPointerException("ServiceHost is empty"));
+            }
+            return;
+        }
+
+        if (TextUtils.isEmpty(msg)) {
+            if (listener != null) {
+                listener.onError(new NullPointerException("msg is empty"));
+            }
+            return;
+        }
+
+        SendMsgTask sendMsgTask = new SendMsgTask("SendMsgTask", xmppConnection, getServiceHost(), localId, withId, msg, listener);
+
+        mTaskMgr.addTask(sendMsgTask);
+    }
+
+    // ---------------------get set---------------------------- //
+
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
+
+    public String getServiceHost() {
+        return serviceHost;
+    }
+
+    public void setServiceHost(String serviceHost) {
+        this.serviceHost = serviceHost;
+    }
+
+    public int getServicePort() {
+        return servicePort;
+    }
+
+    public void setServicePort(int servicePort) {
+        this.servicePort = servicePort;
+    }
 
 }

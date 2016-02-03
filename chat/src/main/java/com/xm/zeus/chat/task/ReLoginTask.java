@@ -10,7 +10,7 @@ public class ReLoginTask extends HttpTask {
 
     private AbstractXMPPConnection xmppConnection;
 
-    public ReLoginTask(String strTaskName, AbstractXMPPConnection xmppConnection, ReLoginTaskListener listener) {
+    public ReLoginTask(String strTaskName, AbstractXMPPConnection xmppConnection, ReLoginListener listener) {
         super(strTaskName);
         this.xmppConnection = xmppConnection;
         this.listener = listener;
@@ -53,9 +53,9 @@ public class ReLoginTask extends HttpTask {
         });
     }
 
-    private ReLoginTaskListener listener;
+    private ReLoginListener listener;
 
-    public interface ReLoginTaskListener {
+    public interface ReLoginListener {
         void onSuccess();
 
         void onError(Exception e);

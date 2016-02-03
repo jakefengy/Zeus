@@ -33,10 +33,11 @@ public class LoginTask extends HttpTask {
 
     private String userName;
     private String password;
+    private String resource;
 
     private AbstractXMPPConnection xmppConnection;
 
-    public LoginTask(String strTaskName, String serviceName, String serviceHost, int servicePort, String userName, String password, LoginTaskListener taskListener) {
+    public LoginTask(String strTaskName, String serviceName, String serviceHost, int servicePort, String userName, String password, String resource, LoginTaskListener taskListener) {
         super(strTaskName);
         this.taskListener = taskListener;
         this.serviceName = serviceName;
@@ -44,6 +45,7 @@ public class LoginTask extends HttpTask {
         this.servicePort = servicePort;
         this.userName = userName;
         this.password = password;
+        this.resource = resource;
     }
 
     @Override
@@ -58,6 +60,7 @@ public class LoginTask extends HttpTask {
                     .setXmppDomain(jid)
                     .setHost(serviceHost)
                     .setPort(servicePort)
+                    .setResource(resource)
                     .setSendPresence(true)
                     .setDebuggerEnabled(BuildConfig.DEBUG);
 
