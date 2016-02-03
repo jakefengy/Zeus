@@ -2,16 +2,6 @@ package com.xm.zeus.chat.entity;
 
 import org.jivesoftware.smack.packet.IQ;
 
-/**
- * Created by yuelongr on 2015/8/4.
- =================================================
- =================================================
- <iq id='HsryZ-40' type='get'>
- <quit xmlns='users:muc:room:quit'roomjid='1@conference.192.168.102.96' />
- </iq>
- =================================================
- =================================================
- */
 public class MUCRoomQuitIQ extends IQ {
 
     public static final String ELEMENT = "quit";

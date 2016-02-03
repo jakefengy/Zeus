@@ -3,9 +3,6 @@ package com.xm.zeus.chat.entity;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.util.XmlStringBuilder;
 
-/**
- * Created by lvxia on 2016-01-25.
- */
 public class MALocalIdExtension implements ExtensionElement {
 
     public static final String NAMESPACE = "urn:xmpp:archive:mamsglocal";

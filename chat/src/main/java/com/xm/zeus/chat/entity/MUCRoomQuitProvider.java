@@ -6,9 +6,6 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 
-/**
- * Created by yuelongr on 2015/8/5.
- */
 public class MUCRoomQuitProvider extends IQProvider<MUCRoomQuitIQ> {
 
     @Override

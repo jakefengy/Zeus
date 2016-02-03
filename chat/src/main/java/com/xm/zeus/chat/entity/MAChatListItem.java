@@ -5,9 +5,6 @@ import org.jivesoftware.smack.util.XmlStringBuilder;
 
 import java.util.Date;
 
-/**
- * Created by yuelongr on 2015/8/5.
- */
 public class MAChatListItem implements NamedElement {
 
     public static final String ELEMENT = "chat";

@@ -2,26 +2,6 @@ package com.xm.zeus.chat.entity;
 
 import org.jivesoftware.smack.packet.IQ;
 
-/**
- * Created by yuelongr on 2015/8/4.
- =================================================
- <iq type="set" id="page1" >
- <modify xmlns="urn:xmpp:archive:modify" withjid="2@192.168.102.96" action="unreadcount" unreadcount="0" />
- </iq>
-
- <iq type="set" id="page1" >
- <modify xmlns="urn:xmpp:archive:modify" withjid="2@192.168.102.96" action="ordinal" ordinal="0" />
- </iq>
-
- <iq type="set" id="page1" >
- <modify xmlns="urn:xmpp:archive:modify" withjid="2@192.168.102.96" action="delete" />
- </iq>
- =================================================
- <iq type="result" id="page1" >
- <modify xmlns="urn:xmpp:archive:modify" withjid="2@192.168.102.96" action="unreadcount" unreadcount="0" />
- </iq>
- =================================================
- */
 public class MAChatModifyIQ extends IQ {
 
     public static final String ELEMENT = "modify";

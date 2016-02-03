@@ -7,21 +7,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-/**
- * Created by yuelongr on 2015/8/5.
- =================================================
- <iq type="get" id="juliet1" >
- <chatlist xmlns="urn:xmpp:archive:chatlist" />
- </iq>
- =================================================
- <iq type="result" id="juliet1" to="1@192.168.102.96/yuelongr-PC">
- <chatlist xmlns="urn:xmpp:archive:chatlist">
- <chat direction="from" lastmessageid="28" lastbody="eg" unreadcount="7" type="chat" withjid="2@192.168.102.96" lastdate="1439455885450" source="" firstdate="1439455884404" ordinal="0"/>
- <chat direction="from" lastmessageid="21" lastbody="dfgdf" unreadcount="18" type="groupchat" withjid="1@conference.192.168.102.96" lastdate="1439455882281" source="2@192.168.102.96" firstdate="1439455878177" ordinal="0"/>
- </chatlist>
- </iq>
- =================================================
- */
 public class MAChatListIQ extends IQ {
 
     public static final String ELEMENT = "chatlist";

@@ -10,9 +10,6 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 import java.util.Date;
 
-/**
- * Created by yuelongr on 2015/9/2.
- */
 public class MAMSGExtensionProvider extends ExtensionElementProvider<MAMSGExtension> {
     @Override
     public MAMSGExtension parse(XmlPullParser parser, int initialDepth) throws XmlPullParserException, IOException, SmackException {

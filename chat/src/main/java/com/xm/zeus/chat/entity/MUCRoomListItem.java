@@ -3,9 +3,6 @@ package com.xm.zeus.chat.entity;
 import org.jivesoftware.smack.packet.NamedElement;
 import org.jivesoftware.smack.util.XmlStringBuilder;
 
-/**
- * Created by yuelongr on 2015/8/5.
- */
 public class MUCRoomListItem implements NamedElement {
 
     public static final String ELEMENT = "room";

@@ -7,9 +7,6 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 import java.util.Date;
 
-/**
- * Created by yuelongr on 2015/8/5.
- */
 public class MAChatListProvider extends IQProvider<MAChatListIQ> {
 
     @Override

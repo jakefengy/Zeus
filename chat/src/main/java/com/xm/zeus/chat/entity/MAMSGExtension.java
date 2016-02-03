@@ -5,9 +5,6 @@ import org.jivesoftware.smack.util.XmlStringBuilder;
 
 import java.util.Date;
 
-/**
- * Created by yuelongr on 2015/9/2.
- */
 public class MAMSGExtension implements ExtensionElement {
 
     public static final String NAMESPACE = "urn:xmpp:archive:mamsgextension";
