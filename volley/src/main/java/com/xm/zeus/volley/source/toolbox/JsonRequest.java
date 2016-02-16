@@ -94,7 +94,7 @@ public abstract class JsonRequest<T> extends Request<T> {
         try {
             return mRequestBody == null ? null : mRequestBody.getBytes(PROTOCOL_CHARSET);
         } catch (UnsupportedEncodingException uee) {
-            VolleyLog.wtf("Unsupported Encoding while trying to get the bytes of %s using %s",
+            VolleyLog.wtf("Unsupported Encoding while trying to sendStringRequest the bytes of %s using %s",
                     mRequestBody, PROTOCOL_CHARSET);
             return null;
         }

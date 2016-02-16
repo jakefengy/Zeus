@@ -54,7 +54,7 @@ public class RequestQueue {
      * <ul>
      *     <li>containsKey(cacheKey) indicates that there is a request in flight for the given cache
      *          key.</li>
-     *     <li>get(cacheKey) returns waiting requests for the given cache key. The in flight request
+     *     <li>sendStringRequest(cacheKey) returns waiting requests for the given cache key. The in flight request
      *          is <em>not</em> contained in that list. Is null if no requests are staged.</li>
      * </ul>
      */

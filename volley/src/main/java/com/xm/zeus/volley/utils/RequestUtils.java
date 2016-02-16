@@ -8,11 +8,12 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.alibaba.fastjson.JSON;
-import com.xm.zeus.common.Tip;
 import com.xm.zeus.volley.exception.DataError;
 import com.xm.zeus.volley.expand.CustomFileRequest;
 import com.xm.zeus.volley.expand.CustomGsonRequest;
+import com.xm.zeus.volley.expand.CustomStringRequest;
 import com.xm.zeus.volley.expand.CustomVolley;
+import com.xm.zeus.volley.expand.RequestCallbackCode;
 import com.xm.zeus.volley.source.DefaultRetryPolicy;
 import com.xm.zeus.volley.source.Request.Method;
 import com.xm.zeus.volley.source.Response.ErrorListener;
@@ -46,6 +47,8 @@ import java.util.UUID;
 public class RequestUtils {
 
     private final static String TAG = RequestUtils.class.getName();
+
+    private static HashMap<String, List<String>> requestTags = new HashMap<>();
 
     // 请求超时设置
     private static int initialTimeoutMs = DefaultRetryPolicy.DEFAULT_TIMEOUT_MS;
@@ -113,9 +116,8 @@ public class RequestUtils {
                                        CustomGsonRequest.RequestListener<T> callback) {
         try {
             if (!isConnected(context)) {
-                Tip.toast(context, "网络不可用，请检查网络连接！");
                 if (callback != null) {
-                    callback.onError(new VolleyError("网络不可用"));
+                    callback.onDataError(new DataError(RequestCallbackCode.NetworkUnavailable.getCode(), RequestCallbackCode.NetworkUnavailable.getName()));
                 }
                 return;
 
@@ -203,6 +205,8 @@ public class RequestUtils {
 
         sReq.setRetryPolicy(timeoutMs, maxNumRetries);
 
+        recordRequestTag(context.getClass().getName(), tag);
+
         getVolleyUtilsInstance().addToRequestQueue(sReq, tag);
     }
 
@@ -223,9 +227,8 @@ public class RequestUtils {
                                        final CustomGsonRequest.RequestListener<T> callback) {
 
         if (!isConnected(context)) {
-            Tip.toast(context, "网络不可用，请检查网络连接！");
             if (callback != null) {
-                callback.onError(new VolleyError("Net is Disconnected"));
+                callback.onDataError(new DataError(RequestCallbackCode.NetworkUnavailable.getCode(), RequestCallbackCode.NetworkUnavailable.getName()));
             }
             return;
 
@@ -281,6 +284,103 @@ public class RequestUtils {
 
         getVolleyUtilsInstance().addToRequestQueue(fReq, tag);
 
+    }
+
+    public static void sendStringRequest(Context context, String tag, String url, HashMap<String, String> params, CustomStringRequest.RequestListener callback) {
+        try {
+            if (!isConnected(context)) {
+                if (callback != null) {
+                    callback.onCustomFail(new DataError(RequestCallbackCode.NetworkUnavailable.getCode(), RequestCallbackCode.NetworkUnavailable.getName()));
+                }
+                return;
+
+            }
+
+            if (TextUtils.isEmpty(url)) {
+                if (callback != null) {
+                    callback.onFail(new VolleyError("url为空"));
+                }
+                return;
+            }
+
+            if (params == null) {
+                params = new HashMap<>();
+            }
+
+            if (TextUtils.isEmpty(tag)) {
+                tag = UUID.randomUUID().toString();
+            }
+
+            String realUrl = RequestUtils.getRequestUrl(url, params);
+            buildStringRequest(context, tag, Method.GET, realUrl, params,
+                    callback, initialTimeoutMs, maxNumRetries);
+
+        } catch (Exception e) {
+            if (callback != null) {
+                callback.onFail(new VolleyError(e));
+            }
+        }
+
+    }
+
+    private static void buildStringRequest(Context context, final String tag,
+                                           int method, String url, HashMap<String, String> params,
+                                           final CustomStringRequest.RequestListener callback, int timeoutMs, int maxNumRetries) {
+
+        CustomStringRequest sReq = new CustomStringRequest(method, url,
+                params, new Listener<String>() {
+
+            @Override
+            public void onResponse(String response) {
+                print(response);
+
+                if (callback != null)
+                    callback.onSuccess(response);
+            }
+        }, new ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                print(error.getMessage());
+                if (error instanceof DataError) {
+                    DataError er = (DataError) error;
+                    if (callback != null)
+                        callback.onCustomFail(new DataError(er.getErrorCode(), er.getErrorMsg()));
+                } else {
+                    if (callback != null)
+                        callback.onFail(error);
+                }
+
+            }
+        });
+
+        sReq.setRetryPolicy(timeoutMs, maxNumRetries);
+
+        recordRequestTag(context.getClass().getName(), tag);
+
+        getVolleyUtilsInstance().addToRequestQueue(sReq, tag);
+    }
+
+    private static void recordRequestTag(String clazzName, String tag) {
+
+        List<String> tags = null;
+
+        if (requestTags.containsKey(clazzName)) {
+            tags = requestTags.get(clazzName);
+
+        } else {
+            tags = new ArrayList<>();
+        }
+
+        tags.add(tag);
+        requestTags.put(clazzName, tags);
+    }
+
+    public static void cancelRequestByContext(String clazzName) {
+        if (requestTags.containsKey(clazzName)) {
+            cancelRequest(requestTags.get(clazzName));
+            requestTags.remove(clazzName);
+        }
     }
 
     /**

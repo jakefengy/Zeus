@@ -40,7 +40,7 @@ import java.util.concurrent.TimeoutException;
  * requestQueue.add(request);
  *
  * try {
- *   JSONObject response = future.get();
+ *   JSONObject response = future.sendStringRequest();
  *   // do something with response
  * } catch (InterruptedException e) {
  *   // handle the error

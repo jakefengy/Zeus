@@ -28,7 +28,7 @@ import android.os.Bundle;
 import com.xm.zeus.volley.source.AuthFailureError;
 
 /**
- * An Authenticator that uses {@link AccountManager} to get auth
+ * An Authenticator that uses {@link AccountManager} to sendStringRequest auth
  * tokens of a specified type for a specified account.
  */
 public class AndroidAuthenticator implements Authenticator {

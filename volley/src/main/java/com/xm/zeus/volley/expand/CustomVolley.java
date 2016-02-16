@@ -145,7 +145,7 @@ public class CustomVolley {
      * @param headers Response Headers.
      */
     public final void checkSessionCookie(Map<String, String> headers) {
-        // && headers.get(SET_COOKIE_KEY).startsWith(SESSION_COOKIE)
+        // && headers.sendStringRequest(SET_COOKIE_KEY).startsWith(SESSION_COOKIE)
         if (headers.containsKey(SET_COOKIE_KEY)) {
             String cookie = headers.get(SET_COOKIE_KEY);
             if (cookie.length() > 0) {
@@ -171,7 +171,7 @@ public class CustomVolley {
 //			// builder.append(sessionId);
 //			// if (headers.containsKey(COOKIE_KEY)) {
 //			// builder.append("; ");
-//			// builder.append(headers.get(COOKIE_KEY));
+//			// builder.append(headers.sendStringRequest(COOKIE_KEY));
 //			// }
 //			headers.put(SET_COOKIE_KEY, sessionId);
 //		}

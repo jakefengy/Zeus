@@ -1,9 +1,9 @@
-package com.xm.zeus.volley.model;
+package com.xm.zeus.volley.entity;
 
 /**
  * Created by fengy on 2016-01-24.
  */
-public class BaseModel {
+public class BaseEntity {
 
     private String Code;
     private String Message;

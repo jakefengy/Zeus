@@ -175,7 +175,7 @@ public class ImageRequest extends Request<Bitmap> {
             decodeOptions.inPreferredConfig = mDecodeConfig;
             bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, decodeOptions);
         } else {
-            // If we have to resize this image, first get the natural bounds.
+            // If we have to resize this image, first sendStringRequest the natural bounds.
             decodeOptions.inJustDecodeBounds = true;
             BitmapFactory.decodeByteArray(data, 0, data.length, decodeOptions);
             int actualWidth = decodeOptions.outWidth;

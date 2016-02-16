@@ -389,7 +389,7 @@ public class DiskBasedCache implements Cache {
             CacheHeader entry = new CacheHeader();
             int magic = readInt(is);
             if (magic != CACHE_MAGIC) {
-                // don't bother deleting, it'll get pruned eventually
+                // don't bother deleting, it'll sendStringRequest pruned eventually
                 throw new IOException();
             }
             entry.key = readString(is);

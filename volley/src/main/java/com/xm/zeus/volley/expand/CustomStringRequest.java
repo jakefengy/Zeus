@@ -1,8 +1,8 @@
 package com.xm.zeus.volley.expand;
 
 import com.alibaba.fastjson.JSON;
-import com.xm.zeus.volley.exception.DataError;
 import com.xm.zeus.volley.entity.BaseEntity;
+import com.xm.zeus.volley.exception.DataError;
 import com.xm.zeus.volley.source.AuthFailureError;
 import com.xm.zeus.volley.source.DefaultRetryPolicy;
 import com.xm.zeus.volley.source.NetworkResponse;
@@ -23,40 +23,33 @@ import java.util.Map;
 /**
  * 自定义Request，添加Cookie管理。返回值类型为T
  */
-public class CustomGsonRequest<T> extends Request<T> {
-
-    /**
-     * 需要转化成的Gson类型
-     */
-    private final java.lang.reflect.Type mType;
+public class CustomStringRequest extends Request<String> {
 
     /**
      * 请求回调接口
      */
-    private final Listener<T> mListener;
+    private final Listener<String> mListener;
 
     /**
      * Post参数，get请求时，该参数为null
      */
-    private final java.util.Map<java.lang.String, java.lang.String> mParams;
+    private final Map<String, String> mParams;
 
     //XML相关
 
     /**
      * @param method        请求类型，如Get、Post，详情请查看： {@link Method}
      * @param url           请求地址
-     * @param type          请求返回值转换成Gson的类型
      * @param params        Post参数
      * @param listener      请求成功回调接口
      * @param errorListener 请求失败回调接口
      */
-    public CustomGsonRequest(int method, java.lang.String url,
-                             java.lang.reflect.Type type, java.util.Map<String, String> params,
-                             Listener<T> listener, ErrorListener errorListener) {
+    public CustomStringRequest(int method, String url,
+                               Map<String, String> params,
+                               Listener<String> listener, ErrorListener errorListener) {
         super(method, url, errorListener);
         mListener = listener;
         mParams = params;
-        mType = type;
     }
 
     /**
@@ -90,14 +83,14 @@ public class CustomGsonRequest<T> extends Request<T> {
      * @return Map<String, String>形式存储的参数
      */
     @Override
-    protected java.util.Map<java.lang.String, java.lang.String> getParams()
+    protected Map<String, String> getParams()
             throws AuthFailureError {
 
-        java.util.Map<java.lang.String, java.lang.String> params = super
+        Map<String, String> params = super
                 .getParams();
 
         if (params == null || params.equals(java.util.Collections.emptyMap())) {
-            params = new java.util.HashMap<java.lang.String, java.lang.String>();
+            params = new java.util.HashMap<String, String>();
         }
 
         if (getMethod() == Method.POST && mParams != null) {
@@ -113,13 +106,13 @@ public class CustomGsonRequest<T> extends Request<T> {
      * @return Map<String, String>形式存储的头文件
      */
     @Override
-    public java.util.Map<java.lang.String, java.lang.String> getHeaders()
+    public Map<String, String> getHeaders()
             throws AuthFailureError {
-        java.util.Map<java.lang.String, java.lang.String> headers = super
+        Map<String, String> headers = super
                 .getHeaders();
 
         if (headers == null || headers.equals(java.util.Collections.emptyMap())) {
-            headers = new java.util.HashMap<java.lang.String, java.lang.String>();
+            headers = new java.util.HashMap<String, String>();
         }
 
         CustomVolley.getInstance().addSessionCookie(headers);
@@ -131,7 +124,7 @@ public class CustomGsonRequest<T> extends Request<T> {
      * 重写父类方法，手动处理返回值格式，保存cookie。
      */
     @Override
-    protected Response<T> parseNetworkResponse(NetworkResponse response) {
+    protected Response<String> parseNetworkResponse(NetworkResponse response) {
 
         CustomVolley.getInstance().checkSessionCookie(response.headers);
 
@@ -139,15 +132,14 @@ public class CustomGsonRequest<T> extends Request<T> {
 
     }
 
-    private Response<T> formattingData(NetworkResponse response) {
+    private Response<String> formattingData(NetworkResponse response) {
 
         try {
             String str = new String(response.data, "utf-8");
+
             BaseEntity baseEntity = JSON.parseObject(str, BaseEntity.class);
             if (baseEntity.getCode().equals("0")) {
-                return (Response<T>) Response.success(
-                        JSON.parseObject(baseEntity.getBody(), mType),
-                        HttpHeaderParser.parseCacheHeaders(response));
+                return Response.success(baseEntity.getBody(), HttpHeaderParser.parseCacheHeaders(response));
             } else {
                 return Response.error(new DataError(baseEntity.getCode(), baseEntity.getMessage()));
             }
@@ -159,24 +151,23 @@ public class CustomGsonRequest<T> extends Request<T> {
     }
 
     @Override
-    protected void deliverResponse(T response) {
+    protected void deliverResponse(String response) {
         mListener.onResponse(response);
     }
 
     @Override
     public String getBodyContentType() {
-        return "application/json; charset="
-                + getParamsEncoding();
+        return "application/json; charset=" + getParamsEncoding();
     }
 
-    // Interface
-    public interface RequestListener<T> {
+    public interface RequestListener {
 
-        void onSuccess(T result);
+        void onSuccess(String result);
 
-        void onDataError(DataError dataError);
+        // 自定义数据错误
+        void onCustomFail(DataError dataError);
 
-        void onError(VolleyError volleyError);
+        void onFail(VolleyError volleyError);
 
     }
 

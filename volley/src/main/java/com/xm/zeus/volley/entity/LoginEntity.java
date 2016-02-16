@@ -1,9 +1,9 @@
-package com.xm.zeus.volley.model;
+package com.xm.zeus.volley.entity;
 
 /**
  * 测试类
  */
-public class LoginModel {
+public class LoginEntity {
 
     private String result;
 
