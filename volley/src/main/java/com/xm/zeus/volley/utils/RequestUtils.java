@@ -64,6 +64,7 @@ public class RequestUtils {
      */
     public static void initRequestUtils(Context appContext) {
         CustomVolley.initVolleyUtils(appContext);
+        cleanCache();
     }
 
     /**
@@ -401,6 +402,13 @@ public class RequestUtils {
         for (String tag : tags) {
             cancelRequest(tag);
         }
+    }
+
+    /**
+     * 清理缓存 程序启动的时候清理一次。
+     */
+    public static void cleanCache() {
+        getVolleyUtilsInstance().getRequestQueue().getCache().clear();
     }
 
 	/* --------------------------私有方法--------------------------------- */

@@ -57,6 +57,7 @@ public class CustomGsonRequest<T> extends Request<T> {
         mListener = listener;
         mParams = params;
         mType = type;
+        setShouldCache(method == Method.GET);
     }
 
     /**
@@ -125,6 +126,10 @@ public class CustomGsonRequest<T> extends Request<T> {
         CustomVolley.getInstance().addSessionCookie(headers);
 
         return headers;
+    }
+
+    public void setEnableCache(boolean enableCache) {
+        setShouldCache(enableCache);
     }
 
     /**

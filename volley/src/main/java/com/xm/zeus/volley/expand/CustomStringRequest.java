@@ -50,6 +50,7 @@ public class CustomStringRequest extends Request<String> {
         super(method, url, errorListener);
         mListener = listener;
         mParams = params;
+        setShouldCache(method == Method.GET);
     }
 
     /**
@@ -118,6 +119,10 @@ public class CustomStringRequest extends Request<String> {
         CustomVolley.getInstance().addSessionCookie(headers);
 
         return headers;
+    }
+
+    public void setEnableCache(boolean enableCache) {
+        setShouldCache(enableCache);
     }
 
     /**

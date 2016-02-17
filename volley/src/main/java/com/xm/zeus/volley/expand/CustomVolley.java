@@ -4,18 +4,18 @@ import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.xm.zeus.volley.source.Request;
+import com.xm.zeus.volley.source.RequestQueue;
+import com.xm.zeus.volley.source.VolleyLog;
+import com.xm.zeus.volley.source.toolbox.HttpStack;
+import com.xm.zeus.volley.source.toolbox.Volley;
+
 import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.params.HttpParams;
 
 import java.util.Map;
-
-import com.xm.zeus.volley.source.Request;
-import com.xm.zeus.volley.source.RequestQueue;
-import com.xm.zeus.volley.source.VolleyLog;
-import com.xm.zeus.volley.source.toolbox.HttpStack;
-import com.xm.zeus.volley.source.toolbox.Volley;
 
 /**
  * 单独管理Volley的事务。
