@@ -1,4 +1,4 @@
-package com.xm.zeus.chat;
+package com.xm.zeus.chat.utils;
 
 import android.text.TextUtils;
 
