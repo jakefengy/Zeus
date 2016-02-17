@@ -16,6 +16,16 @@ public enum NotificationType {
         public String getName() {
             return "聊天";
         }
+    },
+
+    OTHER {
+        public String getCode() {
+            return "other";
+        }
+
+        public String getName() {
+            return "其他";
+        }
     };
 
     public abstract String getCode();
