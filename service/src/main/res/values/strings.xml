@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">service</string>
+    <string name="test_msg_activity">This is Remote Service Test</string>
+</resources>

@@ -8,11 +8,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.os.PowerManager;
+import android.net.Uri;
+import android.os.Bundle;
 import android.os.Vibrator;
 import android.support.v7.app.NotificationCompat;
 import android.text.TextUtils;
+import android.util.Log;
 import android.widget.RemoteViews;
+
+import com.xm.zeus.common.R;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,14 +42,16 @@ public class NotificationBarManager {
 
     // Notification管理
     public NotificationManager mNotificationManager;
-    private NotificationCompat.Builder mBuilder;
 
+    // 通知Id与通知类型管理
     private HashMap<NotificationType, List<Integer>> notificationTypeIdMap;
     private int notifyId; // 自增长
 
-    // 声音控制
+    // 通知栏提醒
+    private boolean isTone = true, isVibration = true;
     private AudioManager am = null;
     private int currentSound;
+    private Uri audioRes;
 
     public void init(Context appContext) {
         mNotificationManager = (NotificationManager) appContext.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -54,11 +60,55 @@ public class NotificationBarManager {
 
         am = (AudioManager) appContext.getSystemService(appContext.AUDIO_SERVICE);
         currentSound = am.getStreamVolume(AudioManager.STREAM_SYSTEM);
+
+        try {
+            audioRes = Uri.parse("android.resource://com.xm.zeus.common/raw/line.mp3");
+        } catch (Exception e) {
+            e.printStackTrace();
+            audioRes = null;
+        }
+
     }
 
-    public boolean showChatNotify(Context appContext, String ticker, String contentTitle, String contentText, Intent intent, RemoteViews remoteviews) {
+    private NotificationCompat.Builder getBuilder(Context appContext, String ticker, String contentTitle, String contentText, Uri sound, Class clazz, Bundle bundle, RemoteViews remoteviews) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(appContext);
 
-        if (TextUtils.isEmpty(ticker) || TextUtils.isEmpty(contentTitle) || TextUtils.isEmpty(contentText)) {
+        builder.setWhen(System.currentTimeMillis())
+                .setTicker(ticker)
+                .setPriority(Notification.PRIORITY_DEFAULT)
+                .setOngoing(false)
+                .setDefaults(Notification.DEFAULT_VIBRATE)
+                .setSmallIcon(R.mipmap.ic_notify);
+
+        if (remoteviews != null) {
+            builder.setContent(remoteviews);
+        } else {
+            builder.setContentTitle(contentTitle)
+                    .setContentText(contentText);
+        }
+
+        if (isTone) {
+            if (sound != null) {
+                playAudio(appContext, sound);
+            } else {
+                playAudio(appContext, audioRes);
+            }
+        }
+
+        if (isVibration) {
+            playShock(appContext);
+        }
+
+        if (clazz != null) {
+            builder.setContentIntent(getDefaultIntent(appContext, notifyId, clazz, bundle));
+        }
+
+        return builder;
+    }
+
+    public boolean showChatNotify(Context appContext, String ticker, Uri sound, int shockLength, Class clazz, Bundle bundle, RemoteViews remoteviews) {
+
+        if (TextUtils.isEmpty(ticker)) {
             return false;
         }
 
@@ -66,29 +116,11 @@ public class NotificationBarManager {
             return false;
         }
 
-        if (mBuilder == null) {
-            mBuilder = new NotificationCompat.Builder(appContext);
-        }
-
-        mBuilder.setWhen(System.currentTimeMillis())
-                .setPriority(Notification.PRIORITY_DEFAULT)
-                .setContentTitle(contentTitle)
-                .setContentText(contentText)
-                .setTicker(ticker);
-
-        PendingIntent pendingIntent = null;
-
-        if (intent != null) {
-            pendingIntent = PendingIntent.getActivity(appContext, 1, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-        }
-
-        if (pendingIntent != null) {
-            mBuilder.setContentIntent(pendingIntent);
-        }
+        NotificationCompat.Builder mBuilder = getBuilder(appContext, ticker, "", "", sound, clazz, bundle, remoteviews);
 
         Notification notification = mBuilder.build();
-        notification.flags = Notification.FLAG_AUTO_CANCEL;
         notification.contentView = remoteviews;
+        notification.flags = Notification.FLAG_AUTO_CANCEL;
 
         mNotificationManager.notify(notifyId, notification);
 
@@ -96,10 +128,40 @@ public class NotificationBarManager {
 
         notifyId++;
 
-        wakeUp(appContext);
-
         return true;
 
+    }
+
+    public boolean showOtherNotify(Context appContext, String ticker, String contentTitle, String contentText, Uri sound, int shockLength, Class clazz, Bundle bundle) {
+        if (TextUtils.isEmpty(ticker) || TextUtils.isEmpty(contentTitle) || TextUtils.isEmpty(contentText)) {
+            return false;
+        }
+
+        NotificationCompat.Builder mBuilder = getBuilder(appContext, ticker, contentTitle, contentText, sound, clazz, bundle, null);
+
+        Notification notification = mBuilder.build();
+        notification.flags = Notification.FLAG_AUTO_CANCEL;
+
+        mNotificationManager.notify(notifyId, notification);
+
+        recordNotifyId(NotificationType.OTHER, notifyId);
+
+        notifyId++;
+
+        return true;
+    }
+
+    public PendingIntent getDefaultIntent(Context appContext, int reqCode, Class clazz, Bundle bundle) {
+        Intent intent = new Intent(appContext, clazz);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        if (bundle != null) {
+            intent.putExtras(bundle);
+        }
+
+        Log.i("RemoteMsgTag", "Extras is " + bundle.toString());
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(appContext, reqCode, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        return pendingIntent;
     }
 
     private void recordNotifyId(NotificationType notificationType, int notifyId) {
@@ -140,32 +202,49 @@ public class NotificationBarManager {
 
     }
 
-    // Wake up the screen
-    private void wakeUp(Context context) {
-
-        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-        PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_DIM_WAKE_LOCK, "bright");
-        wl.acquire();
-        wl.release();
-
-    }
-
     // play audio
-    public void playAudio(Context appContext, int audioResId) {
+    public void playAudio(final Context appContext, final Uri audioRes) {
 
-        MediaPlayer mPlayer = MediaPlayer.create(appContext, audioResId);
-        mPlayer.setLooping(false);
-        mPlayer.setVolume(currentSound, currentSound);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                MediaPlayer mPlayer = MediaPlayer.create(appContext, audioRes);
+                mPlayer.setLooping(false);
+                mPlayer.setVolume(currentSound, currentSound);
 
-        mPlayer.start();
+                mPlayer.start();
+            }
+        }).start();
+
 
     }
 
     // shock 0.2s
-    public void playShock(Context appContext) {
+    public void playShock(final Context appContext) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Vibrator vib = (Vibrator) appContext.getSystemService(Service.VIBRATOR_SERVICE);
+                vib.vibrate(200);
+            }
+        }).start();
 
-        Vibrator vib = (Vibrator) appContext.getSystemService(Service.VIBRATOR_SERVICE);
-        vib.vibrate(200);
+    }
 
+    // get set
+    public boolean isTone() {
+        return isTone;
+    }
+
+    public void setTone(boolean tone) {
+        isTone = tone;
+    }
+
+    public boolean isVibration() {
+        return isVibration;
+    }
+
+    public void setVibration(boolean vibration) {
+        isVibration = vibration;
     }
 }
