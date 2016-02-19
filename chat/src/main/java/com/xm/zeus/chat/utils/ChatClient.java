@@ -21,15 +21,13 @@ import java.util.Date;
 
 /**
  * 聊天管理类
- * <p>
+ * <p/>
  * 作者：小孩子xm on 2016-01-31 13:38
  * 邮箱：1065885952@qq.com
  */
 public class ChatClient {
 
-
     private static ChatClient instance;
-    private final static Object syncLock = new Object();
 
     // 任务管理器
     private TaskManager mTaskMgr;
@@ -46,14 +44,10 @@ public class ChatClient {
         mTaskMgr.init(0);
     }
 
-    public static ChatClient getInstance() {
+    public synchronized static ChatClient getInstance() {
 
         if (instance == null) {
-            synchronized (syncLock) {
-                if (instance == null) {
-                    instance = new ChatClient();
-                }
-            }
+            instance = new ChatClient();
         }
 
         return instance;

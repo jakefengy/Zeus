@@ -13,7 +13,6 @@ import android.os.Bundle;
 import android.os.Vibrator;
 import android.support.v7.app.NotificationCompat;
 import android.text.TextUtils;
-import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.xm.zeus.common.R;
@@ -77,7 +76,6 @@ public class NotificationBarManager {
                 .setTicker(ticker)
                 .setPriority(Notification.PRIORITY_DEFAULT)
                 .setOngoing(false)
-                .setDefaults(Notification.DEFAULT_VIBRATE)
                 .setSmallIcon(R.mipmap.ic_notify);
 
         if (remoteviews != null) {
@@ -87,18 +85,6 @@ public class NotificationBarManager {
                     .setContentText(contentText);
         }
 
-        if (isTone) {
-            if (sound != null) {
-                playAudio(appContext, sound);
-            } else {
-                playAudio(appContext, audioRes);
-            }
-        }
-
-        if (isVibration) {
-            playShock(appContext);
-        }
-
         if (clazz != null) {
             builder.setContentIntent(getDefaultIntent(appContext, notifyId, clazz, bundle));
         }
@@ -106,7 +92,7 @@ public class NotificationBarManager {
         return builder;
     }
 
-    public boolean showChatNotify(Context appContext, String ticker, Uri sound, int shockLength, Class clazz, Bundle bundle, RemoteViews remoteviews) {
+    public boolean showChatNotify(Context appContext, String ticker, Uri sound, Class clazz, Bundle bundle, RemoteViews remoteviews) {
 
         if (TextUtils.isEmpty(ticker)) {
             return false;
@@ -132,7 +118,7 @@ public class NotificationBarManager {
 
     }
 
-    public boolean showOtherNotify(Context appContext, String ticker, String contentTitle, String contentText, Uri sound, int shockLength, Class clazz, Bundle bundle) {
+    public boolean showOtherNotify(Context appContext, String ticker, String contentTitle, String contentText, Uri sound, Class clazz, Bundle bundle) {
         if (TextUtils.isEmpty(ticker) || TextUtils.isEmpty(contentTitle) || TextUtils.isEmpty(contentText)) {
             return false;
         }
@@ -157,8 +143,6 @@ public class NotificationBarManager {
         if (bundle != null) {
             intent.putExtras(bundle);
         }
-
-        Log.i("RemoteMsgTag", "Extras is " + bundle.toString());
 
         PendingIntent pendingIntent = PendingIntent.getActivity(appContext, reqCode, intent, PendingIntent.FLAG_CANCEL_CURRENT);
         return pendingIntent;
@@ -208,7 +192,7 @@ public class NotificationBarManager {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                MediaPlayer mPlayer = MediaPlayer.create(appContext, audioRes);
+                MediaPlayer mPlayer = MediaPlayer.create(appContext, R.raw.line);
                 mPlayer.setLooping(false);
                 mPlayer.setVolume(currentSound, currentSound);
 
