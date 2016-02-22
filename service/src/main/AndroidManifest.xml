@@ -13,9 +13,7 @@
             android:launchMode="singleTask" />
         <activity android:name=".ShowMsgActivity"></activity>
 
-        <service
-            android:name=".ZeusRemoteService"
-            android:process=":push" />
+
 
         <receiver android:name="com.xm.zeus.service.receiver.RebirthReceiver">
             <intent-filter>

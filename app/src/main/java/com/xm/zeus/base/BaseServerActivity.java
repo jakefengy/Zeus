@@ -1,6 +1,8 @@
 package com.xm.zeus.base;
 
+import android.app.Service;
 import android.content.ComponentName;
+import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -10,10 +12,21 @@ import android.os.RemoteException;
  * @author fengy on 2016-02-19
  */
 public abstract class BaseServerActivity extends BaseActivity {
+
+    private Intent serviceIntent = null;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        onBindService(false);
+
+        serviceIntent = setServiceIntent();
+
+        if (serviceIntent != null) {
+            throw new NullPointerException("serviceIntent is null !");
+        }
+
+        onBindService();
+
     }
 
     // 推送服务相关
@@ -31,11 +44,11 @@ public abstract class BaseServerActivity extends BaseActivity {
             }
             baseBinder = null;
             onReleaseService();
-            onBindService(true);
+            onBindService();
         }
     };
 
-    private ServiceConnection connection = new ServiceConnection() {
+    protected ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             try {
@@ -56,6 +69,10 @@ public abstract class BaseServerActivity extends BaseActivity {
         }
     };
 
+    private void onBindService() {
+        bindService(serviceIntent, connection, Service.BIND_AUTO_CREATE);
+    }
+
     @Override
     protected void onDestroy() {
         onReleaseService();
@@ -63,12 +80,7 @@ public abstract class BaseServerActivity extends BaseActivity {
         super.onDestroy();
     }
 
-    /**
-     * 绑定服务
-     *
-     * @param isReBind true：重新绑定服务，false：绑定服务
-     */
-    protected abstract void onBindService(boolean isReBind);
+    protected abstract Intent setServiceIntent();
 
     /**
      * 成功绑定服务

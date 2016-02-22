@@ -74,8 +74,8 @@ public class ZeusRemoteService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i("RemoteMsgTag", "ZeusRemoteService.onStartCommand");
-        return START_NOT_STICKY;
+        Log.i("RemoteMsgTag", "ZeusRemoteService.onStartCommand，Default");
+        return super.onStartCommand(intent, flags, startId);
     }
 
     private void onNewMsgArrived(MsgEntity msg) throws RemoteException {
