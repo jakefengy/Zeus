@@ -21,7 +21,7 @@ public class LoginTask extends HttpTask {
 
         void onSuccess(AbstractXMPPConnection connection);
 
-        void onError(Exception e);
+        void onFail(Exception e);
 
     }
 
@@ -94,7 +94,7 @@ public class LoginTask extends HttpTask {
             @Override
             public void run() {
                 if (taskListener != null) {
-                    taskListener.onError(e);
+                    taskListener.onFail(e);
                 }
             }
         });

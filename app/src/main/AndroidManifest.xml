@@ -19,12 +19,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <service
-            android:name=".service.ZeusRemoteService"
-            android:process=":push" />
-
-        <activity android:name=".views.TalkActivity"></activity>
+        <activity android:name=".ui.BootActivity"></activity>
     </application>
 
 </manifest>

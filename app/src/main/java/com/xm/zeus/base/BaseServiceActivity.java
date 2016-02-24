@@ -7,11 +7,14 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.util.Log;
 
 /**
  * @author fengy on 2016-02-19
  */
-public abstract class BaseServerActivity extends BaseActivity {
+public abstract class BaseServiceActivity extends BaseActivity implements ServiceConnection {
+
+    static final String TAG = "ClientTag";
 
     private Intent serviceIntent = null;
 
@@ -21,7 +24,7 @@ public abstract class BaseServerActivity extends BaseActivity {
 
         serviceIntent = setServiceIntent();
 
-        if (serviceIntent != null) {
+        if (serviceIntent == null) {
             throw new NullPointerException("serviceIntent is null !");
         }
 
@@ -48,35 +51,38 @@ public abstract class BaseServerActivity extends BaseActivity {
         }
     };
 
-    protected ServiceConnection connection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            try {
-                if (service != null) {
-                    baseBinder = service;
-                    service.linkToDeath(mDeathRecipient, 0);
-                }
-                onConnectedService(name, service);
-            } catch (RemoteException e) {
-                e.printStackTrace();
+
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder service) {
+        try {
+            if (service != null) {
+                baseBinder = service;
+                service.linkToDeath(mDeathRecipient, 0);
             }
-
+            onConnectedService(name, service);
+        } catch (RemoteException e) {
+            e.printStackTrace();
         }
 
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            onDisconnectedService(name);
-        }
-    };
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName name) {
+        onDisconnectedService(name);
+    }
 
     private void onBindService() {
-        bindService(serviceIntent, connection, Service.BIND_AUTO_CREATE);
+        BaseServiceActivity.this.bindService(serviceIntent, this, Service.BIND_AUTO_CREATE);
+    }
+
+    protected void print(String content) {
+        Log.i(TAG, content);
     }
 
     @Override
     protected void onDestroy() {
         onReleaseService();
-        unbindService(connection);
+        unbindService(this);
         super.onDestroy();
     }
 
