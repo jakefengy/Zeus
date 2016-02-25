@@ -2,16 +2,14 @@ package com.xm.zeus.pushservice;
 
 import android.app.Service;
 import android.content.Intent;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.RemoteException;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.xm.zeus.common.Logger;
 import com.xm.zeus.pushservice.manager.BinderManager;
 
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -22,30 +20,9 @@ public class ZeusRemoteService extends Service {
     static final String TAG = "RemoteServiceTag";
 
     private AtomicBoolean mIsServiceDestroyed = new AtomicBoolean(false);
-    private Handler handler = new Handler();
 
     // Keys
     public final static String BinderTag = "BinderTag";
-
-    // BinderManager
-    private BinderManager binderManager;
-
-    private IBinder msgBinder = new IMsgManager.Stub() {
-        @Override
-        public List<String> getMsgs() throws RemoteException {
-            return null;
-        }
-
-        @Override
-        public void registerListener(IMsgListener listener) throws RemoteException {
-
-        }
-
-        @Override
-        public void unregisterListener(IMsgListener listener) throws RemoteException {
-
-        }
-    };
 
     @Nullable
     @Override
@@ -53,31 +30,33 @@ public class ZeusRemoteService extends Service {
 
         String binderTag = intent.getStringExtra(BinderTag);
         if (TextUtils.isEmpty(binderTag)) {
-            Log.i(TAG, "Service.onBind, bundle.getString(BinderTag) = null");
-            return msgBinder;
+            print("Service.onBind, bundle.getString(BinderTag) = null");
+            return null;
         }
-        Log.i(TAG, "Service.onBind, bundle.getString(BinderTag) = " + binderTag);
-        new Thread(new ExitService()).start();
-        return binderManager.getBinderByTag(binderTag);
+        print("Service.onBind, bundle.getString(BinderTag) = " + binderTag);
+        return BinderManager.getInstance().getBinderByTag(binderTag);
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.i(TAG, "Service.onCreate");
-        binderManager = BinderManager.getInstance();
+        print("Service.onCreate");
+        new Thread(new ExitService()).start();
 
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(TAG, "Service.onStartCommand，Default");
+        print("Service.onStartCommand，Default");
+        if (intent != null) {
+            print("Service.onStartCommand with intent from = " + intent.getStringExtra("StartTag"));
+        }
         return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
     public void onDestroy() {
-        Log.i(TAG, "Service.onDestroy");
+        print("Service.onDestroy");
         mIsServiceDestroyed.set(true);
         super.onDestroy();
     }
@@ -87,8 +66,9 @@ public class ZeusRemoteService extends Service {
         public void run() {
 
             int index = 0;
-            while (!mIsServiceDestroyed.get() && index != 15) {
-                Log.i(TAG, "--------- timeline = " + index);
+            while (!mIsServiceDestroyed.get()) {
+//                print("--------- timeline = " + index);
+                BinderManager.getInstance().notifyNewMsg("--------- timeline = " + index);
                 index++;
                 try {
                     Thread.sleep(1000);
@@ -97,6 +77,16 @@ public class ZeusRemoteService extends Service {
                 }
             }
 
+        }
+    }
+
+    protected void print(String content) {
+        Log.i(TAG, content);
+
+        try {
+            Logger.writeLog(TAG + " : " + content);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

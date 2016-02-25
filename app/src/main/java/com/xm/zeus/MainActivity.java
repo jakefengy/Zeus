@@ -15,6 +15,7 @@ public class MainActivity extends AppCompatActivity {
 
         Intent serviceIntent = new Intent();
         serviceIntent.setAction("com.xm.zeus.action.ZeusRemoteService");
+        serviceIntent.putExtra("StartTag", "MainActivity");
         startService(serviceIntent);
 
         Intent intent = new Intent(MainActivity.this, BootActivity.class);

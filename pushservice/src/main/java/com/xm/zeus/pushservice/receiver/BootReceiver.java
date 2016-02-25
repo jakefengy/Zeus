@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import com.xm.zeus.common.Logger;
 import com.xm.zeus.pushservice.ZeusRemoteService;
 
 /**
@@ -17,10 +18,21 @@ public class BootReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent != null) {
-            Log.i("ReceiverTag", "BootReceiver.onReceive = " + intent.getAction() + " & startService");
-            context.startService(new Intent(context, ZeusRemoteService.class));
+            print("BootReceiver.onReceive = " + intent.getAction() + " & startService");
+            Intent serviceIntent = new Intent(context, ZeusRemoteService.class);
+            serviceIntent.putExtra("StartTag", "BootReceiver");
+            context.startService(serviceIntent);
         } else {
-            Log.i("ReceiverTag", "BootReceiver.onReceive = null");
+            print("BootReceiver.onReceive = null");
+        }
+    }
+
+    protected void print(String content) {
+        Log.i("ReceiverTag", content);
+        try {
+            Logger.writeLog("ReceiverTag" + " : " + content);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

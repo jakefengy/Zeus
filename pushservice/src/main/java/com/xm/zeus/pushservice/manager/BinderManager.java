@@ -1,14 +1,16 @@
 package com.xm.zeus.pushservice.manager;
 
 import android.os.IBinder;
+import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.text.TextUtils;
 
 import com.xm.zeus.chat.utils.ChatClient;
-import com.xm.zeus.pushservice.IMsgListener;
-import com.xm.zeus.pushservice.IMsgManager;
+import com.xm.zeus.common.aidl.IMsgListener;
+import com.xm.zeus.common.aidl.IMsgManager;
 
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @author fengy on 2016-02-23
@@ -30,7 +32,6 @@ public class BinderManager {
 
     //
     private ChatClient chatClient;
-
 
     public IBinder getBinderByTag(String tag) {
 
@@ -65,21 +66,48 @@ public class BinderManager {
         public abstract String getName();
     }
 
+    // About Message
+    private CopyOnWriteArrayList<String> mMsgList = new CopyOnWriteArrayList<>();
+
+    private RemoteCallbackList<IMsgListener> mListenerList = new RemoteCallbackList<>();
+
     private IBinder msgBinder = new IMsgManager.Stub() {
         @Override
         public List<String> getMsgs() throws RemoteException {
-            return null;
+            return mMsgList;
         }
 
         @Override
         public void registerListener(IMsgListener listener) throws RemoteException {
-
+            if (listener != null) {
+                mListenerList.register(listener);
+            }
         }
 
         @Override
         public void unregisterListener(IMsgListener listener) throws RemoteException {
-
+            if (listener != null) {
+                mListenerList.unregister(listener);
+            }
         }
     };
+
+    public void notifyNewMsg(String message) {
+        mMsgList.add(message);
+
+        final int N = mListenerList.beginBroadcast();
+        for (int i = 0; i < N; i++) {
+            IMsgListener l = mListenerList.getBroadcastItem(i);
+            if (l != null) {
+                try {
+                    l.onNewMsg(message);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        mListenerList.finishBroadcast();
+
+    }
 
 }

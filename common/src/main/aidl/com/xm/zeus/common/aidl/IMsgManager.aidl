@@ -1,9 +1,9 @@
 // IMsgManager.aidl
-package com.xm.zeus.pushservice;
+package com.xm.zeus.common.aidl;
 
 // Declare any non-default types here with import statements
 
-import com.xm.zeus.pushservice.IMsgListener;
+import com.xm.zeus.common.aidl.IMsgListener;
 
 interface IMsgManager {
      List<String> getMsgs();
