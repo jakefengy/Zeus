@@ -12,7 +12,7 @@ import android.util.Log;
 /**
  * @author fengy on 2016-02-19
  */
-public abstract class BaseServiceActivity extends BaseActivity implements ServiceConnection {
+public abstract class ServiceBaseActivity extends BaseActivity implements ServiceConnection {
 
     static final String TAG = "ClientTag";
 
@@ -42,6 +42,7 @@ public abstract class BaseServiceActivity extends BaseActivity implements Servic
     private IBinder.DeathRecipient mDeathRecipient = new IBinder.DeathRecipient() {
         @Override
         public void binderDied() {
+            print("=================ServiceBaseActivity.DeathRecipient");
             if (baseBinder != null) {
                 baseBinder.unlinkToDeath(mDeathRecipient, 0);
             }
@@ -72,7 +73,7 @@ public abstract class BaseServiceActivity extends BaseActivity implements Servic
     }
 
     private void onBindService() {
-        BaseServiceActivity.this.bindService(serviceIntent, this, Service.BIND_AUTO_CREATE);
+        ServiceBaseActivity.this.bindService(serviceIntent, this, Service.BIND_AUTO_CREATE);
     }
 
     protected void print(String content) {

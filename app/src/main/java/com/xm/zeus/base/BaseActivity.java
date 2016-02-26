@@ -14,13 +14,10 @@ public abstract class BaseActivity extends AppCompatActivity {
 
         initVariables();
         initViews(savedInstanceState);
-        loadData();
     }
 
     protected abstract void initVariables();
 
     protected abstract void initViews(Bundle savedInstanceState);
-
-    protected abstract void loadData();
 
 }
