@@ -21,15 +21,13 @@ import java.util.Date;
 
 /**
  * 聊天管理类
- * <p>
+ * <p/>
  * 作者：小孩子xm on 2016-01-31 13:38
  * 邮箱：1065885952@qq.com
  */
 public class ChatClient {
 
-
     private static ChatClient instance;
-    private final static Object syncLock = new Object();
 
     // 任务管理器
     private TaskManager mTaskMgr;
@@ -46,14 +44,10 @@ public class ChatClient {
         mTaskMgr.init(0);
     }
 
-    public static ChatClient getInstance() {
+    public synchronized static ChatClient getInstance() {
 
         if (instance == null) {
-            synchronized (syncLock) {
-                if (instance == null) {
-                    instance = new ChatClient();
-                }
-            }
+            instance = new ChatClient();
         }
 
         return instance;
@@ -76,35 +70,35 @@ public class ChatClient {
 
         if (TextUtils.isEmpty(serviceName)) {
             if (loginListener != null) {
-                loginListener.onError(new NullPointerException("serviceName is empty"));
+                loginListener.onFail(new NullPointerException("serviceName is empty"));
             }
             return;
         }
 
         if (TextUtils.isEmpty(serviceHost)) {
             if (loginListener != null) {
-                loginListener.onError(new NullPointerException("serviceHost is empty"));
+                loginListener.onFail(new NullPointerException("serviceHost is empty"));
             }
             return;
         }
 
         if (TextUtils.isEmpty(userName)) {
             if (loginListener != null) {
-                loginListener.onError(new NullPointerException("userName is empty"));
+                loginListener.onFail(new NullPointerException("userName is empty"));
             }
             return;
         }
 
         if (TextUtils.isEmpty(password)) {
             if (loginListener != null) {
-                loginListener.onError(new NullPointerException("password is empty"));
+                loginListener.onFail(new NullPointerException("password is empty"));
             }
             return;
         }
 
         if (TextUtils.isEmpty(source)) {
             if (loginListener != null) {
-                loginListener.onError(new NullPointerException("source is empty"));
+                loginListener.onFail(new NullPointerException("source is empty"));
             }
             return;
         }
@@ -116,7 +110,7 @@ public class ChatClient {
         LoginTask loginTask = new LoginTask("Login", serviceName, serviceHost, servicePort, userName, password, source, new LoginTask.LoginTaskListener() {
             @Override
             public void onSuccess(AbstractXMPPConnection connection) {
-
+                xmppConnection = connection;
                 loginSuccessful();
 
                 if (loginListener != null) {
@@ -125,9 +119,9 @@ public class ChatClient {
             }
 
             @Override
-            public void onError(Exception e) {
+            public void onFail(Exception e) {
                 if (loginListener != null) {
-                    loginListener.onError(e);
+                    loginListener.onFail(e);
                 }
             }
         });

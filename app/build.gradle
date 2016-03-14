@@ -104,5 +104,4 @@ dependencies {
     compile project(':volley')
     compile project(':chat')
     compile project(':common')
-    compile project(':service')
 }
