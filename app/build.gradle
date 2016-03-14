@@ -27,7 +27,7 @@ android {
         }
 
         release {
-            storeFile file("../../keystore.jks")
+            storeFile file("../keystore.jks")
             storePassword "keystore"
             keyAlias "Zeus"
             keyPassword "keystore"
