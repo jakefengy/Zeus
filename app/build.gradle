@@ -70,14 +70,14 @@ android {
         }
     }
 
-    productFlavors.all { flavor ->
-        flavor.manifestPlaceholders = [UMENG_CHANNEL_VALUE: name]
-    }
-
     // 友盟多渠道打包
     productFlavors {
         wandoujia {}
         tencent {}
+    }
+
+    productFlavors.all { flavor ->
+        flavor.manifestPlaceholders = [UMENG_CHANNEL_VALUE: name]
     }
 
     packagingOptions {
